@@ -13,8 +13,8 @@ SmartReader System requires a time-efficient, high quality distractor generator 
 - pywikibot>=3.0.20200111
 - nltk>=3.4.5
 - tensorflow==1.15 (as a prerequisite for bert-as-service)
-- [bert-as-service](https://github.com/hanxiao/bert-as-service) and follow the "Getting Started" part
-- to get the authcode for questionClassificationAPI, please contact http://www.harishmadabushi.com/research/questionclassification/question-classification-api-documentation/
+- [bert-as-service](https://github.com/hanxiao/bert-as-service). Please follow the "Install" and "Getting Started" part
+- To get your own authcode for questionClassificationAPI, please contact http://www.harishmadabushi.com/research/questionclassification/question-classification-api-documentation/
 
 ## To run
 Please ensure your bert-serving-client is ready and listening!
