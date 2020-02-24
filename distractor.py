@@ -1,6 +1,6 @@
 import json
 import unicodedata
-
+import argparse
 import numpy as np
 import spacy
 import pywikibot
@@ -10,11 +10,6 @@ from useBERT import Vocab
 from feature import Feature, getEntityBERTEmb, getGoldBERTEmb, getQuesBERTEmb
 import time
 
-# spaCy related
-# to download pretrained model: python -m spacy download en_core_web_lg
-nlp = spacy.load('en_core_web_lg')
-embed = np.loadtxt('BERT/bert_embed.txt')  # 19616 * 768
-vocab = Vocab('BERT/vocab20000', 20000)
 
 
 class Article:
@@ -113,7 +108,7 @@ def wbSearchEntities(query):
     return [i['description'] if 'description' in i else None for i in r.json()['search']]
 
 
-def questionClassificationAPI(question):
+def questionClassificationAPI(question, authcode):
     '''
     Coarse	Fine
     ABBR	abbreviation; expansion
@@ -156,7 +151,7 @@ def questionClassificationAPI(question):
         return ''.join(char for char in unicodedata.normalize('NFKD', text)
                        if unicodedata.category(char) != 'Mn')
 
-    authcode = 'ndhcy347ys'
+    authcode = authcode
     url = 'http://qcapi.harishmadabushi.com/?auth=' + authcode \
           + '&question=' + strip_accents(question).replace(' ', '%20')
     r = requests.get(url)
@@ -218,12 +213,14 @@ def getDistractorCandidatesNERTypeSet(questionCoarseType, questionFineType, gold
     return res, cond
 
 
-def preprocessSQuADtrain(trainfile, destfile):
+def processSQuADtrain(trainfile, destfile, useQuestionClassificationAPI, authcode):
     '''
-    read the json format SQuAD train dataset, do preprocessing including named entity recognition and pos taggiing
-    finally save a pickle dump
+    Generate "Question	Gold	Top3_Distractors	Q_Coarse	Q_Fine	Gold_spaCy	Candidate_Type" for SQuAD train dataset
     :param trainfile: SQuAD train dataset 'SQuAD/train-v2.0.json'
-    :return: articleList, a list of Article objects
+    :param destfile: destination file, saving "Question	Gold	Top3_Distractors	Q_Coarse	Q_Fine	Gold_spaCy	Candidate_Type" columns as a tsv file
+    :param useQuestionClassificationAPI: true/false, for detail please refer to http://www.harishmadabushi.com/research/questionclassification/question-classification-api-documentation/
+    :param authcode: authcode for QuestionClassificationAPI, please contact http://www.harishmadabushi.com/research/questionclassification/question-classification-api-documentation/
+    :return: None
     '''
     with open(trainfile) as f:
         data = json.load(f)
@@ -244,11 +241,11 @@ def preprocessSQuADtrain(trainfile, destfile):
             article.entityBERTEmb = getEntityBERTEmb(article.entitySet)
             for paragraph in paragraphs:
                 for qid, qa in enumerate(paragraph['qas']):
-                    # t1 = time.time()
+
                     curQA = QA(question=qa['question'], isImpossible=qa['is_impossible'])
-                    # response = questionClassificationAPI(curQA.question)
-                    # t2 = time.time()
                     response = None
+                    if useQuestionClassificationAPI.lower() == 'true':
+                        response = questionClassificationAPI(curQA.question, authcode)
                     if response and response['status'] == 'Success':
                         curQA.questionCoarseType = response['major_type']
                         curQA.questionFineType = response['minor_type']
@@ -320,5 +317,17 @@ def preprocessSQuADtrain(trainfile, destfile):
             # if i == 0:
             #     break
 
+if __name__=='__main__':
 
-preprocessSQuADtrain('SQuAD/train-v2.0.json', 'play.txt')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--useQuestionClassificationAPI', help='true/false, for detail please refer to http://www.harishmadabushi.com/research/questionclassification/question-classification-api-documentation/')
+    parser.add_argument('--authcode', help='authcode for QuestionClassificationAPI, please contact http://www.harishmadabushi.com/research/questionclassification/question-classification-api-documentation/')
+    args = parser.parse_args()
+    print(args.useQuestionClassificationAPI)
+    print(args.authcode)
+    # spaCy related: to download pretrained model: python -m spacy download en_core_web_lg
+    nlp = spacy.load('en_core_web_lg')
+    embed = np.loadtxt('BERT/bert_embed.txt')  # 19616 * 768
+    vocab = Vocab('BERT/vocab20000', 20000)
+
+    processSQuADtrain('SQuAD/train-v2.0.json', 'destination.txt', args.useQuestionClassificationAPI, args.authcode)
