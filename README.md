@@ -19,7 +19,7 @@ SmartReader System requires a time-efficient, high quality distractor generator 
 ## To run
 Please ensure your bert-serving-client is ready and listening!
 ```
-python distractor.py --useQuestionClassificationAPI <true/false> --authcode <your-auth, not necessary is not using the API>
+python distractor.py --useQuestionClassificationAPI <true/false> --authcode <your-auth, not necessary if not using the API>
 ```
 
 
