@@ -26,6 +26,8 @@ python distractor.py --useQuestionClassificationAPI <true/false> --authcode <you
 
 # Spring-20: Sentence-level Distractors Generation by Transformers
 
+The design of distractors can greatly affect the difficulty of multiple choice questions, therefore in real examinations, it plays a significant role in testing a language learner's comprehension of a passage. A novel method for generating sentence-level distractors with multi-encoder transformers was proposed. In contrast to previous work, the model is characterized by implicitly capturing the relationship between questions, documents and answers, rather than using hierarchical encoding and attention mechanism. Furthermore, considering that the distractors and answers can neither be too similar nor too different from each other, a beam search algorithm using BLEU score between the distractors and answers was designed.
+
 ## Requirements
 
 ```
